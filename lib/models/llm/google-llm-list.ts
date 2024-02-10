@@ -1,7 +1,7 @@
 import { LLM } from "@/types"
 
-// const GOOGLE_PLATORM_LINK = "https://ai.google.dev/"
-const GOOGLE_PLATORM_LINK = "https://gege.xiaochatgpt.xyz/"
+const GOOGLE_PLATORM_LINK = "https://ai.google.dev/"
+// const GOOGLE_PLATORM_LINK = "https://gege.xiaochatgpt.xyz/"
 
 // Google Models (UPDATED 12/22/23) -----------------------------
 
