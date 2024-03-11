@@ -8,12 +8,26 @@ import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completion
 
 export const runtime: ServerRuntime = "edge"
 
+// 预置模型列表
+const presetModels = [
+  {
+    name: "讯飞星火v3.5",
+    baseURL: "https://rdoneapi1.xiaochatgpt.xyz/v1",
+    apiKey: "sk-8ww5TKvXVil7YxLyEbF61fC91bFf40FbBd779e54A18d83Df"
+  },
+  {
+    name: "通义千问-plus",
+    baseURL: "https://rdoneapi1.xiaochatgpt.xyz/v1",
+    apiKey: "sk-8ww5TKvXVil7YxLyEbF61fC91bFf40FbBd779e54A18d83Df"
+  }
+]
+
 export async function POST(request: Request) {
   const json = await request.json()
-  const { chatSettings, messages, customModelId } = json as {
+  const { chatSettings, messages, selectedModelName } = json as {
     chatSettings: ChatSettings
     messages: any[]
-    customModelId: string
+    selectedModelName: string
   }
 
   try {
@@ -22,30 +36,28 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { data: customModel, error } = await supabaseAdmin
-      .from("models")
-      .select("*")
-      .eq("id", customModelId)
-      .single()
+    // 从预置模型列表中查找选定的模型
+    const selectedModel = presetModels.find(model => model.name === selectedModelName)
 
-    if (!customModel) {
-      throw new Error(error.message)
+    if (!selectedModel) {
+      throw new Error("Invalid model selected")
     }
 
+    const { baseURL, apiKey } = selectedModel
+
     const custom = new OpenAI({
-      apiKey: customModel.api_key || "",
-      baseURL: customModel.base_url
+      apiKey,
+      baseURL
     })
 
     const response = await custom.chat.completions.create({
-      model: chatSettings.model as ChatCompletionCreateParamsBase["model"],
+      model: selectedModelName,
       messages: messages as ChatCompletionCreateParamsBase["messages"],
       temperature: chatSettings.temperature,
       stream: true
     })
 
     const stream = OpenAIStream(response)
-
     return new StreamingTextResponse(stream)
   } catch (error: any) {
     let errorMessage = error.message || "An unexpected error occurred"
